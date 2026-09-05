@@ -161,34 +161,54 @@ function severityChip(doc: jsPDF, sev: Severity, x: number, y: number): number {
   return w;
 }
 
-function findingsTable(doc: jsPDF, findings: Finding[], startY: number): number {
+const TEXT_X = MARGIN + 34;
+const TEXT_W = CONTENT_W - 38;
+const DESC_LH = 3.9; // mm per line at 8.3pt
+const REM_LH = 3.7; // mm per line at 7.8pt
+
+function findingsTable(doc: jsPDF, findings: Finding[], startY: number, onNewPage?: () => void): number {
   let y = startY;
   for (const f of findings) {
-    const descLines = doc.splitTextToSize(f.description, CONTENT_W - 34);
-    const remLines = doc.splitTextToSize(`Remediation: ${f.remediation}`, CONTENT_W - 34);
-    const blockH = 12 + descLines.length * 4 + remLines.length * 3.8;
-    if (y + blockH > PAGE_H - 22) {
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8.3);
+    const descLines: string[] = doc.splitTextToSize(f.description, TEXT_W);
+    doc.setFontSize(7.8);
+    const remLines: string[] = doc.splitTextToSize(`Remediation: ${f.remediation}`, TEXT_W);
+
+    const descTop = 15.5; // baseline of first description line, relative to card top
+    const remTop = descTop + descLines.length * DESC_LH + 2.4;
+    const blockH = remTop + (remLines.length - 1) * REM_LH + 5; // bottom padding
+
+    if (y + blockH > PAGE_H - 24) {
       doc.addPage();
-      y = MARGIN;
+      onNewPage?.();
+      y = MARGIN + 6;
     }
+
     doc.setDrawColor(225, 225, 225);
     doc.setFillColor(252, 252, 252);
     doc.roundedRect(MARGIN, y, CONTENT_W, blockH, 2, 2, "FD");
-    severityChip(doc, f.severity, MARGIN + 3, y + 6.4);
+
+    severityChip(doc, f.severity, MARGIN + 3, y + 6.6);
+
     doc.setFont("helvetica", "bold");
     doc.setFontSize(9.5);
     doc.setTextColor(...BLACK);
-    doc.text(f.title, MARGIN + 34, y + 6.4);
+    doc.text(f.title, TEXT_X, y + 6.6);
+
     doc.setFont("helvetica", "normal");
     doc.setFontSize(7.5);
     doc.setTextColor(...GRAY);
-    doc.text(`${f.id} · ${f.category} · CVSS ${f.cvss.toFixed(1)}`, MARGIN + 34, y + 10.6);
+    doc.text(`${f.id} · ${f.category} · CVSS ${f.cvss.toFixed(1)}`, TEXT_X, y + 10.9);
+
     doc.setFontSize(8.3);
     doc.setTextColor(70, 70, 70);
-    doc.text(descLines, MARGIN + 34, y + 15.5);
-    doc.setTextColor(...ORANGE);
+    descLines.forEach((ln, i) => doc.text(ln, TEXT_X, y + descTop + i * DESC_LH));
+
     doc.setFontSize(7.8);
-    doc.text(remLines, MARGIN + 34, y + 15.5 + descLines.length * 4 + 1.5);
+    doc.setTextColor(...ORANGE);
+    remLines.forEach((ln, i) => doc.text(ln, TEXT_X, y + remTop + i * REM_LH));
+
     y += blockH + 3.5;
   }
   return y;
