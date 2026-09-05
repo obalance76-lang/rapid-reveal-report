@@ -263,15 +263,22 @@ export async function downloadIntroPdf(report: ScanReport) {
   doc.text(new Date(report.scannedAt).toUTCString(), MARGIN + 38, y + 21);
   y += 34;
 
-  // score
-  scoreGauge(doc, MARGIN + 30, y + 24, 18, report.score, report.grade);
+  // score (left) + executive summary (right)
+  const gaugeCx = MARGIN + 30;
+  scoreGauge(doc, gaugeCx, y + 26, 18, report.score, report.grade);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(13);
   doc.setTextColor(...BLACK);
-  doc.text("Overall Security Score", MARGIN + 30, y - 3, { align: "center" });
+  doc.text("Overall Security Score", gaugeCx, y - 2, { align: "center" });
 
-  let ry = y + 2;
-  ry = sectionTitle(doc, "Executive Summary", ry) - 6;
+  const sumX = MARGIN + 66;
+  doc.setFillColor(...ORANGE);
+  doc.rect(sumX, y + 4, 3, 7, "F");
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(12.5);
+  doc.setTextColor(...BLACK);
+  doc.text("Executive Summary", sumX + 6, y + 9.4);
+  doc.setFont("helvetica", "normal");
   doc.setFontSize(9.5);
   const counts = {
     critical: report.findings.filter((f) => f.severity === "critical").length,
