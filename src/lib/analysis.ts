@@ -276,7 +276,7 @@ export function runScan(rawUrl: string, mode: "quick" | "deep"): ScanReport {
     try {
       return new URL(url).hostname;
     } catch {
-      return url.replace(/^https?:\/\//, "").split("/")[0];
+      return url.replace(/^https?:\/\//, "").split("/")[0] ?? url;
     }
   })();
 
@@ -287,7 +287,7 @@ export function runScan(rawUrl: string, mode: "quick" | "deep"): ScanReport {
   const findings: Finding[] = [];
   for (let i = 0; i < findingCount && pool.length; i++) {
     const idx = Math.floor(rand() * pool.length);
-    const f = pool.splice(idx, 1)[0];
+    const f = pool.splice(idx, 1)[0]!;
     findings.push({ ...f, id: `ET-${String(i + 1).padStart(3, "0")}` });
   }
   // sort by severity weight
