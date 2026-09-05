@@ -59,7 +59,7 @@ function mulberry32(seed: number) {
   };
 }
 
-const pick = <T,>(r: () => number, arr: T[]): T => arr[Math.floor(r() * arr.length)];
+const pick = <T,>(r: () => number, arr: T[]): T => arr[Math.floor(r() * arr.length)]!;
 
 // ---------- finding pools ----------
 const FINDING_POOL: Omit<Finding, "id">[] = [
